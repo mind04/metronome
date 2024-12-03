@@ -1,5 +1,4 @@
-#ifndef _YAHTTP_URL_HPP
-#define _YAHTTP_URL_HPP 1
+#pragma once
 #include <sstream>
 #include <string>
 
@@ -39,7 +38,18 @@ namespace YaHTTP {
              host = url.substr(pos, pos1-pos);
              pos = pos1;
           }
-          if ( (pos1 = host.find_first_of(":")) != std::string::npos ) {
+          if (host.at(0) == '[') { // IPv6
+            if ((pos1 = host.find_first_of("]")) == std::string::npos) {
+              // incomplete address
+              return false;
+            }
+            size_t pos2;
+            if ((pos2 = host.find_first_of(":", pos1)) != std::string::npos) {
+              std::istringstream tmp(host.substr(pos2 + 1));
+              tmp >> port;
+            }
+            host = host.substr(1, pos1 - 1);
+          } else if ( (pos1 = host.find_first_of(":")) != std::string::npos ) {
              std::istringstream tmp(host.substr(pos1+1));
              tmp >> port;
              host = host.substr(0, pos1);
@@ -59,7 +69,7 @@ namespace YaHTTP {
              password = url.substr(pos2+1, pos1 - pos2 - 1);
              password = Utility::decodeURL(password);
           } else {
-             username = url.substr(pos+1, pos1 - pos);
+             username = url.substr(pos, pos1 - pos);
           }
           pos = pos1+1;
           username = Utility::decodeURL(username);
@@ -188,4 +198,3 @@ namespace YaHTTP {
     };
   };
 };
-#endif

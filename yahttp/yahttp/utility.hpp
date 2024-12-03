@@ -1,9 +1,25 @@
-#ifndef _YAHTTP_UTILITY_HPP
-#define _YAHTTP_UTILITY_HPP 1
+#pragma once
+
+#ifndef YAHTTP_MAX_REQUEST_LINE_SIZE
+#define YAHTTP_MAX_REQUEST_LINE_SIZE 8192
+#endif
+
+#ifndef YAHTTP_MAX_REQUEST_FIELDS
+#define YAHTTP_MAX_REQUEST_FIELDS 100
+#endif
 
 namespace YaHTTP {
   static const char *MONTHS[] = {0,"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",0}; //<! List of months 
   static const char *DAYS[] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat",0}; //<! List of days
+
+  bool isspace(char c);
+  bool isspace(char c, const std::locale& loc);
+  bool isxdigit(char c);
+  bool isxdigit(char c, const std::locale& loc);
+  bool isdigit(char c);
+  bool isdigit(char c, const std::locale& loc);
+  bool isalnum(char c);
+  bool isalnum(char c, const std::locale& loc);
 
   /*! Case-Insensitive NULL safe comparator for string maps */
   struct ASCIICINullSafeComparator {
@@ -109,12 +125,12 @@ namespace YaHTTP {
      }; //<! parses date from struct tm 
 
      void validate() const {
-       if (wday < 0 || wday > 6) throw "Invalid date";
-       if (month < 1 || month > 12) throw "Invalid date";
-       if (year < 0) throw "Invalid date";
+       if (wday < 0 || wday > 6) throw std::range_error("Invalid date");
+       if (month < 1 || month > 12) throw std::range_error("Invalid date");
+       if (year < 0) throw std::range_error("Invalid date");
        if (hours < 0 || hours > 23 ||
            minutes < 0 || minutes > 59 ||
-           seconds < 0 || seconds > 60) throw "Invalid date";
+           seconds < 0 || seconds > 60) throw std::range_error("Invalid date");
      }; //<! make sure we are within ranges (not a *REAL* validation, just range check)
 
      std::string rfc_str() const {
@@ -153,32 +169,38 @@ namespace YaHTTP {
 	if ( (ptr = strptime(rfc822_date.c_str(), "%a, %d %b %Y %T", &tm)) != NULL) {
           int sign;
   	  // parse the timezone parameter
-          while(*ptr && ::isspace(*ptr)) ptr++;
+          while(*ptr && YaHTTP::isspace(*ptr)) ptr++;
           if (*ptr == '+') sign = 0;
           else if (*ptr == '-') sign = -1;
-          else throw "Unparseable date";
+          else throw YaHTTP::ParseError("Unparseable date");
           ptr++;
           utc_offset = ::atoi(ptr) * sign;
-          while(*ptr && ::isdigit(*ptr)) ptr++;
+          while(*ptr != '\0' && YaHTTP::isdigit(*ptr)) ptr++;
 #endif
-          while(*ptr && ::isspace(*ptr)) ptr++;
-          if (*ptr) throw "Unparseable date"; // must be final.
+          while(*ptr != '\0' && YaHTTP::isspace(*ptr)) ptr++;
+          if (*ptr != '\0') throw YaHTTP::ParseError("Unparseable date"); // must be final.
           fromTm(&tm);
        } else {
-          throw "Unparseable date";
+          throw YaHTTP::ParseError("Unparseable date");
        }
      }; //<! parses RFC-822 date
 
      void parseCookie(const std::string &cookie_date) {
        struct tm tm;
        const char *ptr;
-       if ( (ptr = strptime(cookie_date.c_str(), "%d-%b-%Y %T", &tm)) != NULL) {
-          while(*ptr && ( ::isspace(*ptr) || ::isalnum(*ptr) )) ptr++;
-          if (*ptr) throw "Unparseable date (non-final)"; // must be final.
+       if ( (ptr = strptime(cookie_date.c_str(), "%d-%b-%Y %T", &tm)) != NULL
+#ifdef HAVE_TM_GMTOFF
+          || (ptr = strptime(cookie_date.c_str(), "%d-%b-%Y %T %z", &tm)) != NULL
+          || (ptr = strptime(cookie_date.c_str(), "%a, %d-%b-%Y %T %Z", &tm)) != NULL
+#endif
+          ) {
+          while(*ptr != '\0' && ( YaHTTP::isspace(*ptr) || YaHTTP::isalnum(*ptr) )) ptr++;
+          if (*ptr != '\0') throw YaHTTP::ParseError("Unparseable date (non-final)"); // must be final.
           fromTm(&tm);
           this->utc_offset = 0;
        } else {
-          throw "Unparseable date (did not match pattern cookie)";
+          std::cout << cookie_date << std::endl;
+          throw YaHTTP::ParseError("Unparseable date (did not match pattern cookie)");
        }
      }; //<! parses HTTP Cookie date
 
@@ -219,9 +241,9 @@ namespace YaHTTP {
            }
 
            if ('0' <= a && a <= '9') a = a - '0';
-           if ('a' <= a && a <= 'f') a = a - 'a' + 0x0a;
+           else if ('a' <= a && a <= 'f') a = a - 'a' + 0x0a;
            if ('0' <= b && b <= '9') b = b - '0';
-           if ('a' <= b && b <= 'f') b = b - 'a' + 0x0a;
+           else if ('a' <= b && b <= 'f') b = b - 'a' + 0x0a;
 
            c = (a<<4)+b;
            result = result.replace(pos1,3,1,c);
@@ -236,7 +258,7 @@ namespace YaHTTP {
       char repl[3];
       size_t pos;
       for(std::string::iterator iter = result.begin(); iter != result.end(); iter++) {
-        if (!std::isalnum(*iter) && (!asUrl || skip.find(*iter) == std::string::npos)) {
+        if (!YaHTTP::isalnum(*iter) && (!asUrl || skip.find(*iter) == std::string::npos)) {
           // replace with different thing
           pos = std::distance(result.begin(), iter);
           ::snprintf(repl,3,"%02x", static_cast<unsigned char>(*iter));
@@ -255,7 +277,7 @@ namespace YaHTTP {
       std::ostringstream result;
       std::string skip = "+-.,&;_#%[]?/@(){}=";
       for(std::vector<unsigned char>::iterator iter = vec.begin(); iter != vec.end(); iter++) {
-        if (!std::isalnum((char)*iter) && (!asUrl || skip.find((char)*iter) == std::string::npos)) {
+        if (!YaHTTP::isalnum((char)*iter) && (!asUrl || skip.find((char)*iter) == std::string::npos)) {
           // bit more complex replace
           result << "%" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(*iter);
         } else result << (char)*iter;
@@ -329,6 +351,8 @@ namespace YaHTTP {
            return "Requested range not satisfiable";
        case 417:
            return "Expectation Failed";
+       case 422:
+           return "Unprocessable Entity";
        case 500:
            return "Internal Server Error";
        case 501:
@@ -346,9 +370,13 @@ namespace YaHTTP {
        }
     }; //<! static HTTP codes to text mappings
 
-    static strstr_map_t parseUrlParameters(std::string parameters) {
-      std::string::size_type pos = 0;
+    static strstr_map_t parseUrlParameters(const std::string& parameters) {
       strstr_map_t parameter_map;
+      if (parameters.size() > YAHTTP_MAX_REQUEST_LINE_SIZE) {
+        return parameter_map;
+      }
+
+      std::string::size_type pos = 0;
       while (pos != std::string::npos) {
         // find next parameter start
         std::string::size_type nextpos = parameters.find("&", pos);
@@ -372,11 +400,12 @@ namespace YaHTTP {
           // no parameters at all
           break;
         }
-        key = decodeURL(key);
-        value = decodeURL(value);
-        parameter_map[key] = value;
+        parameter_map[decodeURL(key)] = decodeURL(value);
         if (nextpos == std::string::npos) {
           // no more parameters left
+          break;
+        }
+        if (parameter_map.size() >= YAHTTP_MAX_REQUEST_FIELDS) {
           break;
         }
 
@@ -407,14 +436,14 @@ namespace YaHTTP {
     static void trimLeft(std::string &str) {
        const std::locale &loc = std::locale::classic();
        std::string::iterator iter = str.begin();
-       while(iter != str.end() && std::isspace(*iter, loc)) iter++;
+       while(iter != str.end() && YaHTTP::isspace(*iter, loc)) iter++;
        str.erase(str.begin(), iter);
     }; //<! removes whitespace from left
 
     static void trimRight(std::string &str) {
        const std::locale &loc = std::locale::classic();
        std::string::reverse_iterator iter = str.rbegin();
-       while(iter != str.rend() && std::isspace(*iter, loc)) iter++;
+       while(iter != str.rend() && YaHTTP::isspace(*iter, loc)) iter++;
        str.erase(iter.base(), str.end());
     }; //<! removes whitespace from right
 
@@ -442,4 +471,3 @@ namespace YaHTTP {
    }; //<! camelizes headers, such as, content-type => Content-Type
   };
 };
-#endif

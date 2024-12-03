@@ -27,7 +27,6 @@ namespace YaHTTP {
   bool Router::route(Request *req, THandlerFunction& handler) {
     std::map<std::string, TDelim> params;
     int pos1,pos2;
-    std::string pname;
     bool matched = false;
     std::string rname;
 
@@ -100,7 +99,7 @@ namespace YaHTTP {
 
   void Router::printRoutes(std::ostream &os) {
     for(TRouteList::iterator i = routes.begin(); i != routes.end(); i++) {
-#ifdef HAVE_CXX11
+#if __cplusplus >= 201103L
       std::streamsize ss = os.width();
       std::ios::fmtflags ff = os.setf(std::ios::left);
       os.width(10);
@@ -124,7 +123,7 @@ namespace YaHTTP {
 
     bool found = false;
     for(TRouteList::iterator i = routes.begin(); !found && i != routes.end(); i++) {
-#ifdef HAVE_CXX11
+#if __cplusplus >= 201103L
       if (std::get<3>(*i) == name) { mask = std::get<1>(*i); method = std::get<0>(*i); found = true; }
 #else
       if (i->get<3>() == name) { mask = i->get<1>(); method = i->get<0>(); found = true; }
