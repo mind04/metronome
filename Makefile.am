@@ -61,8 +61,7 @@ dist_doc_DATA = \
 
 EXTRA_DIST = \
   LICENSE \
-  metronome.service.in \
-  metronome-upstart.conf
+  metronome.service.in
 
 if HAVE_SYSTEMD
 metronome.service: metronome.service.in

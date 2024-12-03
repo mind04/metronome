@@ -3,7 +3,7 @@ FROM alpine:3.18 AS metronome
 ARG BUILDER_CACHE_BUSTER=
 RUN apk add gcc g++ make tar autoconf automake eigen-dev file bash libtool pkgconfig boost-dev
 
-ADD README.md LICENSE metronome.service.in metronome-upstart.conf configure.ac Makefile.am interpolate.cc iputils.cc mdump.cc metronome.cc mmanage.cc msubmit.cc statstorage.cc testrunner.cc test-statstorage.cc dolog.hh interpolate.hh iputils.hh metromisc.hh statstorage.hh /metronome/
+ADD README.md LICENSE metronome.service.in configure.ac Makefile.am interpolate.cc iputils.cc mdump.cc metronome.cc mmanage.cc msubmit.cc statstorage.cc testrunner.cc test-statstorage.cc dolog.hh interpolate.hh iputils.hh metromisc.hh statstorage.hh /metronome/
 @EXEC sdist_dirs=(m4 ahutils examples html yahttp)
 @EXEC for d in ${sdist_dirs[@]} ; do echo "COPY $d/ /metronome/$d/" ; done
 ADD builder/helpers/set-configure-ac-version.sh /metronome/builder/helpers/
