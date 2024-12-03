@@ -23,19 +23,21 @@ public:
     {
       return timestamp < t;
     }
-    bool operator==(const Datum &rhs) const
+    bool operator==(const Datum& rhs) const
     {
       return std::tie(rhs.timestamp, rhs.value) == std::tie(timestamp, value);
     }
   };
   void store(const std::string& name, const std::vector<Datum>& data);
-  std::vector<Datum> retrieve(const std::string& name, time_t begin, time_t end, int number=-1);
+  std::vector<Datum> retrieve(const std::string& name, time_t begin, time_t end, int number = -1);
   std::vector<Datum> retrieve(const std::string& name);
   std::vector<std::string> getMetrics();
+
 private:
   std::string d_root;
   regex_t d_preg;
-  struct Val { 
+  struct Val
+  {
     uint32_t timestamp;
     float value;
     bool operator<(const Val& rhs) const

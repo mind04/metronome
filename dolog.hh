@@ -6,9 +6,9 @@
 /* This file is intended not to be metronome specific, and is simple example of C++2011
    variadic templates in action.
 
-   The goal is rapid easy to use logging to console & syslog. 
+   The goal is rapid easy to use logging to console & syslog.
 
-   Usage: 
+   Usage:
           string address="localhost";
           infolog("Bound to %s port %d", address, port);
           warnlog("Query took %d milliseconds", 1232.4); // yes, %d
@@ -21,59 +21,59 @@
    This will happily print a string to %d! Doesn't do further format processing.
 */
 
-inline void dolog(std::ostream& os, const char*s)
+inline void dolog(std::ostream& os, const char* s)
 {
-  os<<s;
+  os << s;
 }
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 void dolog(std::ostream& os, const char* s, T value, Args... args)
 {
   while (*s) {
     if (*s == '%') {
       if (*(s + 1) == '%') {
-	++s;
+        ++s;
       }
       else {
-	os << value;
-	s += 2;
-	dolog(os, s, args...); 
-	return;
+        os << value;
+        s += 2;
+        dolog(os, s, args...);
+        return;
       }
     }
     os << *s++;
-  }    
+  }
 }
 
 extern bool g_console;
 extern bool g_disableSyslog;
 extern bool g_verbose;
 
-template<typename... Args>
+template <typename... Args>
 void genlog(int level, const char* s, Args... args)
 {
   std::ostringstream str;
   dolog(str, s, args...);
   if (!g_disableSyslog)
     syslog(level, "%s", str.str().c_str());
-  if(g_console) 
-    std::cout<<str.str()<<std::endl;
+  if (g_console)
+    std::cout << str.str() << std::endl;
 }
 
-template<typename... Args>
+template <typename... Args>
 void infolog(const char* s, Args... args)
 {
-  if(g_verbose)
+  if (g_verbose)
     genlog(LOG_INFO, s, args...);
 }
 
-template<typename... Args>
+template <typename... Args>
 void warnlog(const char* s, Args... args)
 {
   genlog(LOG_WARNING, s, args...);
 }
 
-template<typename... Args>
+template <typename... Args>
 void errlog(const char* s, Args... args)
 {
   genlog(LOG_ERR, s, args...);

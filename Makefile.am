@@ -87,3 +87,6 @@ endif
 
 #testrunner: testrunner.o test-statstorage.o statstorage.o
 #	$(CXX) $^ -lboost_unit_test_framework -o $@ 
+
+format-code:
+	./build-scripts/format-code `find . -type f -name '*.[ch][ch]'`

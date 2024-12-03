@@ -6,29 +6,26 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
-using std::cin;
 using std::cerr;
+using std::cin;
 using std::cout;
 using std::endl;
-
 
 // syntax: mmanage
 int main(int argc, char** argv)
 {
-  try
-  {
+  try {
     StatStorage ss("./stats");
-    auto metrics=ss.getMetrics();
-    cout<<"Have "<<metrics.size()<<" metrics"<<endl;
-    for(const auto& m: metrics) {
-      auto vals=ss.retrieve(m);
-      cout<<"Have "<<vals.size()<<" values for "<<m<<endl;
+    auto metrics = ss.getMetrics();
+    cout << "Have " << metrics.size() << " metrics" << endl;
+    for (const auto& m : metrics) {
+      auto vals = ss.retrieve(m);
+      cout << "Have " << vals.size() << " values for " << m << endl;
       ss.store(m, vals);
     }
   }
-  catch(const std::exception& e)
-  {
-    cerr<<"Error: "<<e.what()<<endl;
+  catch (const std::exception& e) {
+    cerr << "Error: " << e.what() << endl;
     exit(EXIT_FAILURE);
   }
 }

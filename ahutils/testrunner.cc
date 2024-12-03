@@ -2,5 +2,5 @@
 
 int main()
 {
-	RFile rf("./testrunner.cc", "r");
+  RFile rf("./testrunner.cc", "r");
 }

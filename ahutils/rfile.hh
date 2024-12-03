@@ -4,8 +4,8 @@
 class RFile
 {
 public:
-	RFile(const char* name, const char* mode);
+  RFile(const char* name, const char* mode);
 
-	FILE* d_fp;
-	int d_fd;
+  FILE* d_fp;
+  int d_fd;
 };
