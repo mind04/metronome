@@ -5,6 +5,7 @@
 #include <tuple>
 #include <ctime>
 #include <regex.h>
+#include <stdint.h>
 
 //! make your own instance, not thread safe
 class StatStorage
