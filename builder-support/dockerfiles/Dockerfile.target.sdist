@@ -1,4 +1,4 @@
-FROM alpine:3.10 as metronome
+FROM alpine:3.18 AS metronome
 
 ARG BUILDER_CACHE_BUSTER=
 RUN apk add gcc g++ make tar autoconf automake eigen-dev file bash libtool pkgconfig boost-dev
@@ -18,6 +18,6 @@ RUN /metronome/builder/helpers/set-configure-ac-version.sh && \
     make dist
 RUN cp metronome-${BUILDER_VERSION}.tar.bz2 /sdist/
 
-FROM alpine:3.10 as sdist
+FROM alpine:3.18 AS sdist
 ARG BUILDER_CACHE_BUSTER=
 COPY --from=metronome /sdist/ /sdist/

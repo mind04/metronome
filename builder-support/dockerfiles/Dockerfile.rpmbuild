@@ -1,4 +1,4 @@
-FROM dist-base as package-builder
+FROM dist-base AS package-builder
 RUN yum install -y rpm-build rpmdevtools /usr/bin/python3 && \
     yum groupinstall -y "Development Tools" && \
     rpmdev-setuptree

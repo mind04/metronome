@@ -1,0 +1,6 @@
+# First do the source builds
+@INCLUDE Dockerfile.target.sdist
+
+FROM debian:trixie AS dist-base
+
+@INCLUDE Dockerfile.debbuild
